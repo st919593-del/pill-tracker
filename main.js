@@ -7,6 +7,7 @@ const weekDays = ['日', '一', '二', '三', '四', '五', '六'];
 let currentEditingId = null;
 
 // 初始化 28 顆藥丸
+grid.innerHTML = ''; // 清空確保不重複生成
 for (let i = 1; i <= 28; i++) {
     const div = document.createElement('div');
     div.className = 'pill';
@@ -39,10 +40,17 @@ function openModal(index) {
     // 清除上次勾選
     document.querySelectorAll('.sym-check').forEach(c => c.checked = false);
     
-    // 讀取舊有副作用紀錄
+    // 讀取紀錄
     let history = JSON.parse(localStorage.getItem('pillTrackerData')) || {};
-    if (history[currentEditingId] && history[currentEditingId].symptoms) {
-        history[currentEditingId].symptoms.forEach(sym => {
+    let record = history[currentEditingId];
+    
+    // 如果是舊格式(字串)，自動轉成新格式(物件)
+    if (typeof record === 'string') {
+        record = { status: record, symptoms: [] };
+    }
+
+    if (record && record.symptoms) {
+        record.symptoms.forEach(sym => {
             const cb = document.querySelector(`.sym-check[value="${sym}"]`);
             if (cb) cb.checked = true;
         });
@@ -59,7 +67,6 @@ function logStatus(status) {
     const p = document.getElementById(currentEditingId);
     let history = JSON.parse(localStorage.getItem('pillTrackerData')) || {};
     
-    // 獲取勾選的副作用
     const checks = document.querySelectorAll('.sym-check:checked');
     const selectedSyms = Array.from(checks).map(c => c.value);
 
@@ -82,14 +89,13 @@ function logStatus(status) {
 }
 
 function checkStock(history) {
-    // 計算已吃掉幾顆 (status 為 taken 的)
-    const takenCount = Object.values(history).filter(item => item.status === 'taken').length;
-    const remaining = 21 - takenCount; // 以 21 顆藥效期計算
-    
-    if (remaining <= 3 && remaining > 0) {
-        warningBox.style.display = 'block';
-    } else {
-        warningBox.style.display = 'none';
+    const takenCount = Object.values(history).filter(item => {
+        const s = typeof item === 'string' ? item : item.status;
+        return s === 'taken';
+    }).length;
+    const remaining = 21 - takenCount;
+    if (warningBox) {
+        warningBox.style.display = (remaining <= 3 && remaining > 0) ? 'block' : 'none';
     }
 }
 
@@ -119,10 +125,12 @@ window.onload = function() {
     for (let id in savedData) {
         const p = document.getElementById(id);
         if (p) {
-            p.classList.add(savedData[id].status || savedData[id]);
-            if (savedData[id].symptoms && savedData[id].symptoms.length > 0) {
-                p.classList.add('has-symptoms');
-            }
+            let record = savedData[id];
+            let status = typeof record === 'string' ? record : record.status;
+            let syms = record.symptoms || [];
+            
+            p.classList.add(status);
+            if (syms.length > 0) p.classList.add('has-symptoms');
         }
     }
     checkStock(savedData);
