@@ -26,7 +26,6 @@
         <div class="legend">
             <div class="legend-item"><span class="dot taken"></span> 已吃藥</div>
             <div class="legend-item"><span class="dot period"></span> 月經期</div>
-            <div class="legend-item"><span class="dot sym"></span> 副作用</div>
         </div>
         <button id="reset-btn">清空所有資料</button>
     </div>
@@ -36,18 +35,20 @@
             <h3 id="modal-title">第 1 天</h3>
             <p id="modal-date">-</p>
             <div class="symptom-section">
-                <p>身體狀況紀錄：</p>
+                <p>身體紀錄：</p>
                 <div class="checkbox-group">
                     <label><input type="checkbox" class="sym-check" value="出血"> 點狀出血</label>
                     <label><input type="checkbox" class="sym-check" value="頭痛"> 頭痛</label>
                     <label><input type="checkbox" class="sym-check" value="噁心"> 噁心</label>
                     <label><input type="checkbox" class="sym-check" value="胸漲"> 胸部脹痛</label>
                 </div>
+                <p style="margin-top:10px;">備註：</p>
+                <textarea id="modal-note" placeholder="紀錄今天的心情或特別狀況..." rows="2" style="width:100%; border-radius:10px; border:1px solid #ffe0e9; padding:5px; font-family:inherit;"></textarea>
             </div>
-            <button class="btn-action" type="button" onclick="logAction('taken')">已服藥</button>
-            <button class="btn-action period-btn" type="button" onclick="logAction('period')">月經紀錄</button>
-            <button class="btn-action clear-btn" type="button" onclick="logAction('clear')">清除紀錄</button>
-            <button class="btn-close" type="button" onclick="closeModal()">關閉返回</button>
+            <button class="btn-action" onclick="logAction('taken')">已服藥</button>
+            <button class="btn-action period-btn" onclick="logAction('period')">月經紀錄</button>
+            <button class="btn-action clear-btn" onclick="logAction('clear')">清除紀錄</button>
+            <button class="btn-close" onclick="closeModal()">關閉返回</button>
         </div>
     </div>
     <script src="main.js"></script>
