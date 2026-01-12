@@ -6,6 +6,7 @@ const weekDays = ['日', '一', '二', '三', '四', '五', '六'];
 
 let currentEditingId = null;
 
+// 初始化 28 顆藥丸
 function initGrid() {
     grid.innerHTML = ''; 
     for (let i = 1; i <= 28; i++) {
@@ -37,13 +38,12 @@ function openModal(index) {
     targetDate.setDate(targetDate.getDate() + (index - 1));
     document.getElementById('modal-date').innerText = `${targetDate.getFullYear()}/${targetDate.getMonth() + 1}/${targetDate.getDate()} (星期${weekDays[targetDate.getDay()]})`;
     
-    // 恢復副作用狀態
     document.querySelectorAll('.sym-check').forEach(c => c.checked = false);
     
     let history = JSON.parse(localStorage.getItem('pillTrackerData')) || {};
     let record = history[currentEditingId] || { taken: false, period: false, symptoms: [] };
 
-    // 格式檢查與相容
+    // 格式容錯處理
     if (typeof record !== 'object') {
         record = { taken: record === 'taken', period: record === 'period', symptoms: [] };
     }
@@ -62,7 +62,7 @@ function closeModal() {
     modal.style.display = 'none';
 }
 
-// 核心修正：確保狀態切換後視覺立即更新
+// 核心修正：點擊後全部自動跳回
 function logAction(type) {
     if (!currentEditingId) return;
     
@@ -72,7 +72,7 @@ function logAction(type) {
         history[currentEditingId] = { taken: false, period: false, symptoms: [] };
     }
 
-    // 更新副作用
+    // 儲存副作用勾選
     const checks = document.querySelectorAll('.sym-check:checked');
     history[currentEditingId].symptoms = Array.from(checks).map(c => c.value);
 
@@ -88,13 +88,8 @@ function logAction(type) {
     applyStyles(history);
     checkStock(history);
     
-    // 月經點擊後不關視窗，方便使用者繼續勾選副作用；吃藥和清除則自動關閉
-    if (type === 'taken' || type === 'clear') {
-        closeModal();
-    } else {
-        // 點擊月經紀錄時給予一個簡單的視覺反饋（如按鈕變色）
-        console.log("月經狀態已切換");
-    }
+    // 所有的動作點擊後都自動跳回（關閉視窗）
+    closeModal();
 }
 
 function applyStyles(history) {
@@ -119,7 +114,7 @@ function checkStock(history) {
     let takenCount = 0;
     for (let key in history) {
         let data = history[key];
-        if (data.taken || data === 'taken') takenCount++;
+        if (data.taken) takenCount++;
     }
     const remaining = 21 - takenCount;
     if (warningBox) {
