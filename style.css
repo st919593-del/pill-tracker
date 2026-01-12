@@ -1,100 +1,31 @@
-body {
-    background: #fff5f7;
-    font-family: -apple-system, "Microsoft JhengHei", sans-serif;
-    display: flex;
-    justify-content: center;
-    margin: 0;
-    color: #333;
-}
-
-.app {
-    width: 90%;
-    max-width: 400px;
-    text-align: center;
-    padding: 20px 0;
-}
-
-h1 { color: #ff4d7d; margin-bottom: 20px; }
+body { background: #fff5f7; font-family: -apple-system, sans-serif; display: flex; justify-content: center; margin: 0; }
+.app { width: 90%; max-width: 400px; text-align: center; padding: 20px 0; }
 
 /* 資訊面板 */
-.info-panel {
-    background: white;
-    padding: 15px;
-    border-radius: 20px;
-    margin-bottom: 20px;
-    text-align: left;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-}
-
-.settings {
-    margin-bottom: 10px;
-    font-weight: bold;
-}
-
-.settings input {
-    border: 1px solid #ffccd5;
-    border-radius: 5px;
-    padding: 5px;
-    color: #ff4d7d;
-}
-
-.dates-info {
-    border-top: 1px dashed #ffe0e9;
-    padding-top: 10px;
-    font-size: 14px;
-}
-
-.dates-info p { margin: 5px 0; }
+.info-panel { background: white; padding: 15px; border-radius: 20px; margin-bottom: 20px; text-align: left; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+.dates-info { border-top: 1px dashed #ffe0e9; margin-top: 10px; padding-top: 10px; font-size: 14px; }
 .dates-info span { color: #ff4d7d; font-weight: bold; }
 
 /* 藥盒格子 */
-.grid {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    gap: 10px;
-    background: white;
-    padding: 15px;
-    border-radius: 20px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-}
+.grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px; background: white; padding: 15px; border-radius: 20px; }
+.pill { aspect-ratio: 1/1; border: 2px solid #ffe0e9; border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 11px; cursor: pointer; transition: 0.2s; }
 
-.pill {
-    aspect-ratio: 1/1;
-    border: 2px solid #ffe0e9;
-    border-radius: 50%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    font-size: 11px;
-    color: #ffafc3;
-    background: white;
-}
+/* 各種狀態顏色 */
+.pill.taken { background: #ff4d7d; color: white; border-color: #ff4d7d; }
+.pill.period { background: #ffb3b3; border: 3px solid #ff4d4d; color: #cc0000; font-weight: bold; }
 
-.pill.taken {
-    background: #ff4d7d;
-    color: white;
-    border-color: #ff4d7d;
-}
+/* 圖例 */
+.legend { margin-top: 15px; font-size: 12px; color: #666; }
+.dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-left: 10px; }
+.dot.taken { background: #ff4d7d; }
+.dot.period { background: #ffb3b3; border: 1px solid #ff4d4d; }
 
-/* 按鈕 */
-button {
-    width: 100%;
-    margin-top: 20px;
-    padding: 15px;
-    border: none;
-    border-radius: 30px;
-    background: #ff4d7d;
-    color: white;
-    font-size: 18px;
-    font-weight: bold;
-    cursor: pointer;
-}
+/* 彈出視窗 */
+.modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); align-items: center; justify-content: center; }
+.modal-content { background: white; padding: 25px; border-radius: 25px; width: 80%; max-width: 300px; }
+.btn-action { width: 100%; padding: 12px; margin: 5px 0; border: none; border-radius: 15px; font-size: 16px; cursor: pointer; background: #ff4d7d; color: white; }
+.period-btn { background: #ff4d4d; }
+.clear-btn { background: #ccc; }
+.btn-close { background: none; border: none; color: #999; margin-top: 10px; cursor: pointer; }
 
-#reset-btn {
-    background: none;
-    color: #ffafc3;
-    font-size: 14px;
-    text-decoration: underline;
-    margin-top: 5px;
-}
+#reset-btn { background: none; color: #ffafc3; text-decoration: underline; margin-top: 20px; border:none; cursor:pointer;}
