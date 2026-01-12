@@ -1,11 +1,12 @@
 const grid = document.getElementById('pill-grid');
 const startDateInput = document.getElementById('start-date');
 const modal = document.getElementById('edit-modal');
+const warningBox = document.getElementById('stock-warning');
 const weekDays = ['日', '一', '二', '三', '四', '五', '六'];
 
 let currentEditingId = null;
 
-// 1. 生成 28 顆藥丸
+// 初始化 28 顆藥丸
 for (let i = 1; i <= 28; i++) {
     const div = document.createElement('div');
     div.className = 'pill';
@@ -15,10 +16,8 @@ for (let i = 1; i <= 28; i++) {
     grid.appendChild(div);
 }
 
-// 【關鍵修正】手動解析日期字串，防止時區造成的一天誤差
 function getFixedDate(dateString) {
     if (!dateString) return new Date();
-    // 將 "2026-01-12" 拆解為年、月、日，並手動建立本地時間物件
     const parts = dateString.split('-');
     return new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
 }
@@ -32,14 +31,23 @@ function openModal(index) {
     currentEditingId = 'p-' + index;
     document.getElementById('modal-title').innerText = `第 ${index} 天`;
     
-    // 計算該藥丸對應的日期
     let targetDate = getFixedDate(startVal);
     targetDate.setDate(targetDate.getDate() + (index - 1));
     
-    const formattedDate = `${targetDate.getFullYear()}/${targetDate.getMonth() + 1}/${targetDate.getDate()}`;
-    const dayName = weekDays[targetDate.getDay()];
+    document.getElementById('modal-date').innerText = `${targetDate.getFullYear()}/${targetDate.getMonth() + 1}/${targetDate.getDate()} (星期${weekDays[targetDate.getDay()]})`;
     
-    document.getElementById('modal-date').innerText = `${formattedDate} (星期${dayName})`;
+    // 清除上次勾選
+    document.querySelectorAll('.sym-check').forEach(c => c.checked = false);
+    
+    // 讀取舊有副作用紀錄
+    let history = JSON.parse(localStorage.getItem('pillTrackerData')) || {};
+    if (history[currentEditingId] && history[currentEditingId].symptoms) {
+        history[currentEditingId].symptoms.forEach(sym => {
+            const cb = document.querySelector(`.sym-check[value="${sym}"]`);
+            if (cb) cb.checked = true;
+        });
+    }
+
     modal.style.display = 'flex';
 }
 
@@ -50,42 +58,54 @@ function closeModal() {
 function logStatus(status) {
     const p = document.getElementById(currentEditingId);
     let history = JSON.parse(localStorage.getItem('pillTrackerData')) || {};
+    
+    // 獲取勾選的副作用
+    const checks = document.querySelectorAll('.sym-check:checked');
+    const selectedSyms = Array.from(checks).map(c => c.value);
 
-    p.classList.remove('taken', 'period'); 
+    p.classList.remove('taken', 'period', 'has-symptoms');
+
     if (status === 'clear') {
         delete history[currentEditingId];
     } else {
-        history[currentEditingId] = status;
+        history[currentEditingId] = {
+            status: status,
+            symptoms: selectedSyms
+        };
         p.classList.add(status);
+        if (selectedSyms.length > 0) p.classList.add('has-symptoms');
     }
 
     localStorage.setItem('pillTrackerData', JSON.stringify(history));
+    checkStock(history);
     closeModal();
+}
+
+function checkStock(history) {
+    // 計算已吃掉幾顆 (status 為 taken 的)
+    const takenCount = Object.values(history).filter(item => item.status === 'taken').length;
+    const remaining = 21 - takenCount; // 以 21 顆藥效期計算
+    
+    if (remaining <= 3 && remaining > 0) {
+        warningBox.style.display = 'block';
+    } else {
+        warningBox.style.display = 'none';
+    }
 }
 
 function updateDates() {
     const startVal = startDateInput.value;
     if (!startVal) return;
-    
     const startDate = getFixedDate(startVal);
 
-    // 1. 計算停藥日
-    let pauseDate = new Date(startDate);
-    pauseDate.setDate(startDate.getDate() + 21);
-    document.getElementById('pause-date').innerText = `${pauseDate.getFullYear()}/${pauseDate.getMonth() + 1}/${pauseDate.getDate()}`;
+    document.getElementById('pause-date').innerText = new Date(startDate.getTime() + 21 * 24 * 60 * 60 * 1000).toLocaleDateString();
+    document.getElementById('next-pack-date').innerText = new Date(startDate.getTime() + 28 * 24 * 60 * 60 * 1000).toLocaleDateString();
 
-    // 2. 計算下包開始日
-    let nextDate = new Date(startDate);
-    nextDate.setDate(startDate.getDate() + 28);
-    document.getElementById('next-pack-date').innerText = `${nextDate.getFullYear()}/${nextDate.getMonth() + 1}/${nextDate.getDate()}`;
-
-    // 3. 更新格子標籤
     for (let i = 1; i <= 28; i++) {
         let cur = new Date(startDate);
         cur.setDate(startDate.getDate() + (i - 1));
         const p = document.getElementById('p-' + i);
-        const dayLabel = weekDays[cur.getDay()];
-        p.innerHTML = `<small>${dayLabel}</small><b>${i}</b>`;
+        p.innerHTML = `<small>${weekDays[cur.getDay()]}</small><b>${i}</b>`;
     }
 }
 
@@ -98,8 +118,14 @@ window.onload = function() {
     const savedData = JSON.parse(localStorage.getItem('pillTrackerData')) || {};
     for (let id in savedData) {
         const p = document.getElementById(id);
-        if (p) p.classList.add(savedData[id]);
+        if (p) {
+            p.classList.add(savedData[id].status || savedData[id]);
+            if (savedData[id].symptoms && savedData[id].symptoms.length > 0) {
+                p.classList.add('has-symptoms');
+            }
+        }
     }
+    checkStock(savedData);
 };
 
 startDateInput.onchange = function() {
