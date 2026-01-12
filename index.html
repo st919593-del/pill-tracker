@@ -24,8 +24,8 @@
         <div id="pill-grid" class="grid"></div>
 
         <div class="legend">
-            <span class="dot taken"></span> 已吃藥
-            <span class="dot period"></span> 月經期
+            <div class="legend-item"><span class="dot taken"></span> 已吃藥</div>
+            <div class="legend-item"><span class="dot period"></span> 月經期</div>
         </div>
 
         <button id="reset-btn">清空所有資料</button>
@@ -34,7 +34,7 @@
     <div id="edit-modal" class="modal">
         <div class="modal-content">
             <h3 id="modal-title">第 1 天</h3>
-            <p id="modal-date">2023/01/01</p>
+            <p id="modal-date">-</p>
             <button class="btn-action" onclick="logStatus('taken')">已吃藥</button>
             <button class="btn-action period-btn" onclick="logStatus('period')">月經來了</button>
             <button class="btn-action clear-btn" onclick="logStatus('clear')">清除狀態</button>
