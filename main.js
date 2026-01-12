@@ -6,7 +6,6 @@ const weekDays = ['日', '一', '二', '三', '四', '五', '六'];
 
 let currentEditingId = null;
 
-// 初始化 28 顆藥丸
 function initGrid() {
     grid.innerHTML = ''; 
     for (let i = 1; i <= 28; i++) {
@@ -39,20 +38,19 @@ function openModal(index) {
     document.getElementById('modal-date').innerText = `${targetDate.getFullYear()}/${targetDate.getMonth() + 1}/${targetDate.getDate()} (星期${weekDays[targetDate.getDay()]})`;
     
     document.querySelectorAll('.sym-check').forEach(c => c.checked = false);
+    document.getElementById('modal-note').value = ''; // 清空備註欄
     
     let history = JSON.parse(localStorage.getItem('pillTrackerData')) || {};
-    let record = history[currentEditingId] || { taken: false, period: false, symptoms: [] };
-
-    // 格式容錯處理
-    if (typeof record !== 'object') {
-        record = { taken: record === 'taken', period: record === 'period', symptoms: [] };
-    }
+    let record = history[currentEditingId] || { taken: false, period: false, symptoms: [], note: "" };
 
     if (record.symptoms) {
         record.symptoms.forEach(sym => {
             const cb = document.querySelector(`.sym-check[value="${sym}"]`);
             if (cb) cb.checked = true;
         });
+    }
+    if (record.note) {
+        document.getElementById('modal-note').value = record.note;
     }
 
     modal.style.display = 'flex';
@@ -62,33 +60,30 @@ function closeModal() {
     modal.style.display = 'none';
 }
 
-// 核心修正：點擊後全部自動跳回
 function logAction(type) {
     if (!currentEditingId) return;
-    
     let history = JSON.parse(localStorage.getItem('pillTrackerData')) || {};
     
     if (!history[currentEditingId] || typeof history[currentEditingId] !== 'object') {
-        history[currentEditingId] = { taken: false, period: false, symptoms: [] };
+        history[currentEditingId] = { taken: false, period: false, symptoms: [], note: "" };
     }
 
-    // 儲存副作用勾選
+    // 儲存副作用與備註
     const checks = document.querySelectorAll('.sym-check:checked');
     history[currentEditingId].symptoms = Array.from(checks).map(c => c.value);
+    history[currentEditingId].note = document.getElementById('modal-note').value;
 
     if (type === 'taken') {
         history[currentEditingId].taken = !history[currentEditingId].taken;
     } else if (type === 'period') {
         history[currentEditingId].period = !history[currentEditingId].period;
     } else if (type === 'clear') {
-        history[currentEditingId] = { taken: false, period: false, symptoms: [] };
+        history[currentEditingId] = { taken: false, period: false, symptoms: [], note: "" };
     }
 
     localStorage.setItem('pillTrackerData', JSON.stringify(history));
     applyStyles(history);
     checkStock(history);
-    
-    // 所有的動作點擊後都自動跳回（關閉視窗）
     closeModal();
 }
 
@@ -99,23 +94,27 @@ function applyStyles(history) {
         if (!p) continue;
         
         let data = history[id] || { taken: false, period: false, symptoms: [] };
-        if (typeof data !== 'object') {
-            data = { taken: data === 'taken', period: data === 'period', symptoms: [] };
-        }
-
         p.classList.remove('taken', 'period', 'has-symptoms');
-        if (data.taken) p.classList.add('taken');
-        if (data.period) p.classList.add('period');
+        
+        // 重新填寫內容，加入圖示邏輯
+        let iconHtml = '';
+        if (data.taken) {
+            p.classList.add('taken');
+            iconHtml += '<span class="icon-pill">💊</span>';
+        }
+        if (data.period) {
+            p.classList.add('period');
+            iconHtml += '<span class="icon-drop">🩸</span>';
+        }
+        
+        p.innerHTML = `<small>${p.querySelector('small')?.innerText || ''}</small><b>${i}</b>${iconHtml}`;
         if (data.symptoms && data.symptoms.length > 0) p.classList.add('has-symptoms');
     }
 }
 
 function checkStock(history) {
     let takenCount = 0;
-    for (let key in history) {
-        let data = history[key];
-        if (data.taken) takenCount++;
-    }
+    for (let key in history) { if (history[key].taken) takenCount++; }
     const remaining = 21 - takenCount;
     if (warningBox) {
         warningBox.style.display = (remaining <= 3 && remaining > 0) ? 'block' : 'none';
@@ -126,7 +125,6 @@ function updateDates() {
     const startVal = startDateInput.value;
     if (!startVal) return;
     const startDate = getFixedDate(startVal);
-
     document.getElementById('pause-date').innerText = new Date(startDate.getTime() + 21 * 24 * 60 * 60 * 1000).toLocaleDateString();
     document.getElementById('next-pack-date').innerText = new Date(startDate.getTime() + 28 * 24 * 60 * 60 * 1000).toLocaleDateString();
 
@@ -136,6 +134,8 @@ function updateDates() {
         const p = document.getElementById('p-' + i);
         if (p) p.innerHTML = `<small>${weekDays[cur.getDay()]}</small><b>${i}</b>`;
     }
+    const savedData = JSON.parse(localStorage.getItem('pillTrackerData')) || {};
+    applyStyles(savedData);
 }
 
 window.onload = function() {
