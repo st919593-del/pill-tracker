@@ -3,13 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>私密健康助手 Pro</title>
+    <title>Health Tracker Pro</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="app">
         <h1>Health Tracker</h1>
-        
         <div class="info-panel">
             <div class="settings">
                 <label>開始服藥日：</label>
@@ -23,15 +22,12 @@
                 ⚠️ 藥量剩餘不到 3 顆，記得補貨！
             </div>
         </div>
-
         <div id="pill-grid" class="grid"></div>
-
         <div class="legend">
             <div class="legend-item"><span class="dot taken"></span> 已吃藥</div>
             <div class="legend-item"><span class="dot period"></span> 月經期</div>
             <div class="legend-item"><span class="dot sym"></span> 副作用</div>
         </div>
-
         <button id="reset-btn">清空所有資料</button>
     </div>
 
@@ -39,7 +35,6 @@
         <div class="modal-content">
             <h3 id="modal-title">第 1 天</h3>
             <p id="modal-date">-</p>
-            
             <div class="symptom-section">
                 <p>身體狀況紀錄：</p>
                 <div class="checkbox-group">
@@ -49,14 +44,12 @@
                     <label><input type="checkbox" class="sym-check" value="胸漲"> 胸部脹痛</label>
                 </div>
             </div>
-
-            <button class="btn-action" onclick="logAction('taken')">已服藥</button>
-            <button class="btn-action period-btn" onclick="logAction('period')">月經紀錄</button>
-            <button class="btn-action clear-btn" onclick="logAction('clear')">全部清除</button>
-            <button class="btn-close" onclick="closeModal()">關閉返回</button>
+            <button class="btn-action" type="button" onclick="logAction('taken')">已服藥</button>
+            <button class="btn-action period-btn" type="button" onclick="logAction('period')">月經紀錄</button>
+            <button class="btn-action clear-btn" type="button" onclick="logAction('clear')">清除紀錄</button>
+            <button class="btn-close" type="button" onclick="closeModal()">關閉返回</button>
         </div>
     </div>
-
     <script src="main.js"></script>
 </body>
 </html>
