@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>私密健康助手</title>
+    <title>私密健康助手 Pro</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -18,6 +18,9 @@
             <div class="dates-info">
                 <p>🛑 停藥日期：<span id="pause-date">-</span></p>
                 <p>📦 下包開始：<span id="next-pack-date">-</span></p>
+            </div>
+            <div id="stock-warning" class="warning-box" style="display:none;">
+                ⚠️ 藥量剩餘不到 3 顆，記得補貨！
             </div>
         </div>
 
@@ -35,13 +38,10 @@
         <div class="modal-content">
             <h3 id="modal-title">第 1 天</h3>
             <p id="modal-date">-</p>
-            <button class="btn-action" onclick="logStatus('taken')">已吃藥</button>
-            <button class="btn-action period-btn" onclick="logStatus('period')">月經來了</button>
-            <button class="btn-action clear-btn" onclick="logStatus('clear')">清除狀態</button>
-            <button class="btn-close" onclick="closeModal()">取消</button>
-        </div>
-    </div>
-
-    <script src="main.js"></script>
-</body>
-</html>
+            
+            <div class="symptom-section">
+                <p>身體狀況紀錄：</p>
+                <div class="checkbox-group">
+                    <label><input type="checkbox" class="sym-check" value="出血"> 點狀出血</label>
+                    <label><input type="checkbox" class="sym-check" value="頭痛"> 頭痛</label>
+                    <label><input type="checkbox" class="sym-check" value="噁心"> 噁心</label>
