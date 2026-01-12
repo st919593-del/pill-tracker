@@ -36,21 +36,21 @@ function openModal(index) {
     
     let targetDate = getFixedDate(startVal);
     targetDate.setDate(targetDate.getDate() + (index - 1));
-    
     document.getElementById('modal-date').innerText = `${targetDate.getFullYear()}/${targetDate.getMonth() + 1}/${targetDate.getDate()} (星期${weekDays[targetDate.getDay()]})`;
     
+    // 清除副作用勾選
     document.querySelectorAll('.sym-check').forEach(c => c.checked = false);
     
-    try {
-        let history = JSON.parse(localStorage.getItem('pillTrackerData')) || {};
-        let record = history[currentEditingId];
-        if (record && record.symptoms) {
-            record.symptoms.forEach(sym => {
-                const cb = document.querySelector(`.sym-check[value="${sym}"]`);
-                if (cb) cb.checked = true;
-            });
-        }
-    } catch(e) { console.log("資料讀取錯誤", e); }
+    let history = JSON.parse(localStorage.getItem('pillTrackerData')) || {};
+    let record = history[currentEditingId] || { taken: false, period: false, symptoms: [] };
+
+    // 恢復副作用勾選
+    if (record.symptoms) {
+        record.symptoms.forEach(sym => {
+            const cb = document.querySelector(`.sym-check[value="${sym}"]`);
+            if (cb) cb.checked = true;
+        });
+    }
 
     modal.style.display = 'flex';
 }
@@ -59,27 +59,45 @@ function closeModal() {
     modal.style.display = 'none';
 }
 
-function logStatus(status) {
+// 核心邏輯：分開紀錄「吃藥」與「生理紀錄」
+function logAction(type) {
     const p = document.getElementById(currentEditingId);
     let history = JSON.parse(localStorage.getItem('pillTrackerData')) || {};
     
-    const checks = document.querySelectorAll('.sym-check:checked');
-    const selectedSyms = Array.from(checks).map(c => c.value);
-
-    p.classList.remove('taken', 'period', 'has-symptoms');
-
-    if (status === 'clear') {
-        delete history[currentEditingId];
-    } else {
-        history[currentEditingId] = {
-            status: status,
-            symptoms: selectedSyms
-        };
-        p.classList.add(status);
-        if (selectedSyms.length > 0) p.classList.add('has-symptoms');
+    // 初始化該格資料
+    if (!history[currentEditingId] || typeof history[currentEditingId] !== 'object') {
+        history[currentEditingId] = { taken: false, period: false, symptoms: [] };
     }
 
+    const checks = document.querySelectorAll('.sym-check:checked');
+    history[currentEditingId].symptoms = Array.from(checks).map(c => c.value);
+
+    if (type === 'taken') {
+        history[currentEditingId].taken = !history[currentEditingId].taken; // 切換吃藥狀態
+    } else if (type === 'period') {
+        history[currentEditingId].period = !history[currentEditingId].period; // 切換月經狀態
+    } else if (type === 'clear') {
+        history[currentEditingId] = { taken: false, period: false, symptoms: [] };
+    }
+
+    saveAndRefresh(history);
+}
+
+function saveAndRefresh(history) {
     localStorage.setItem('pillTrackerData', JSON.stringify(history));
+    
+    // 更新所有藥丸的視覺外觀
+    for (let id in history) {
+        const p = document.getElementById(id);
+        if (!p) continue;
+        const data = history[id];
+
+        p.classList.remove('taken', 'period', 'has-symptoms');
+        if (data.taken) p.classList.add('taken');
+        if (data.period) p.classList.add('period');
+        if (data.symptoms && data.symptoms.length > 0) p.classList.add('has-symptoms');
+    }
+
     checkStock(history);
     closeModal();
 }
@@ -87,9 +105,7 @@ function logStatus(status) {
 function checkStock(history) {
     let takenCount = 0;
     for (let key in history) {
-        let item = history[key];
-        let s = (typeof item === 'object') ? item.status : item;
-        if (s === 'taken') takenCount++;
+        if (history[key].taken) takenCount++;
     }
     const remaining = 21 - takenCount;
     if (warningBox) {
@@ -114,30 +130,15 @@ function updateDates() {
 }
 
 window.onload = function() {
-    initGrid(); // 確保先畫出格子
+    initGrid();
     const savedStart = localStorage.getItem('pillStartDate');
     if (savedStart) {
         startDateInput.value = savedStart;
         updateDates();
     }
     
-    try {
-        const savedData = JSON.parse(localStorage.getItem('pillTrackerData')) || {};
-        for (let id in savedData) {
-            const p = document.getElementById(id);
-            if (p) {
-                let record = savedData[id];
-                let status = (typeof record === 'object') ? record.status : record;
-                let syms = (record && record.symptoms) ? record.symptoms : [];
-                p.classList.add(status);
-                if (syms.length > 0) p.classList.add('has-symptoms');
-            }
-        }
-        checkStock(savedData);
-    } catch(e) {
-        console.error("啟動載入失敗，清空損毀資料");
-        localStorage.removeItem('pillTrackerData');
-    }
+    const savedData = JSON.parse(localStorage.getItem('pillTrackerData')) || {};
+    saveAndRefresh(savedData); // 初始化外觀
 };
 
 startDateInput.onchange = function() {
@@ -146,7 +147,7 @@ startDateInput.onchange = function() {
 };
 
 document.getElementById('reset-btn').onclick = function() {
-    if (confirm('確定清空所有紀錄？')) {
+    if (confirm('確定重置所有資料？')) {
         localStorage.clear();
         location.reload();
     }
