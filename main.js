@@ -1,112 +1,106 @@
 const grid = document.getElementById('pill-grid');
-const btn = document.getElementById('btn');
-const resetBtn = document.getElementById('reset-btn');
 const startDateInput = document.getElementById('start-date');
-
+const modal = document.getElementById('edit-modal');
 const weekDays = ['日', '一', '二', '三', '四', '五', '六'];
+
+let currentEditingId = null; // 紀錄目前正在點擊哪一顆
 
 // 1. 初始化 28 顆藥丸
 for (let i = 1; i <= 28; i++) {
     const div = document.createElement('div');
     div.className = 'pill';
     div.id = 'p-' + i;
-    div.innerHTML = `<span>${i}</span>`;
+    div.onclick = () => openModal(i); // 點擊藥丸開啟編輯
     grid.appendChild(div);
 }
 
-// 2. 計算所有關鍵日期
+// 2. 開啟與關閉視窗
+function openModal(index) {
+    const startVal = startDateInput.value;
+    if (!startVal) {
+        alert("請先設定開始服藥日");
+        return;
+    }
+    currentEditingId = 'p-' + index;
+    document.getElementById('modal-title').innerText = `第 ${index} 天`;
+    
+    // 計算那一天的實際日期
+    let targetDate = new Date(startVal);
+    targetDate.setDate(targetDate.getDate() + (index - 1));
+    document.getElementById('modal-date').innerText = targetDate.toLocaleDateString() + ` (星期${weekDays[targetDate.getDay()]})`;
+    
+    modal.style.display = 'flex';
+}
+
+function closeModal() {
+    modal.style.display = 'none';
+}
+
+// 3. 紀錄狀態 (已吃藥 / 月經 / 清除)
+function logStatus(status) {
+    const p = document.getElementById(currentEditingId);
+    let history = JSON.parse(localStorage.getItem('pillTrackerData')) || {};
+
+    if (status === 'clear') {
+        delete history[currentEditingId];
+        p.classList.remove('taken', 'period');
+    } else {
+        history[currentEditingId] = status;
+        p.className = 'pill ' + status;
+    }
+
+    localStorage.setItem('pillTrackerData', JSON.stringify(history));
+    closeModal();
+}
+
+// 4. 更新日期資訊
 function updateDates() {
     const startVal = startDateInput.value;
-    
-    // 顯示今天星期幾
-    const today = new Date();
-    document.getElementById('today-weekday').innerText = `星期${weekDays[today.getDay()]}`;
-
     if (!startVal) return;
 
     const startDate = new Date(startVal);
     
-    // 計算停藥日 (第 21 顆吃完後的隔天，即第 22 天)
+    // 停藥日
     let pauseDate = new Date(startDate);
     pauseDate.setDate(startDate.getDate() + 21);
     document.getElementById('pause-date').innerText = pauseDate.toLocaleDateString();
 
-    // 計算下包開始日 (第 29 天)
+    // 下包開始日
     let nextDate = new Date(startDate);
     nextDate.setDate(startDate.getDate() + 28);
     document.getElementById('next-pack-date').innerText = nextDate.toLocaleDateString();
-    
-    // 更新藥丸顯示的星期 (進階功能：讓你知道每顆藥是星期幾)
+
+    // 更新格子上的星期顯示
     for (let i = 1; i <= 28; i++) {
-        let currentPillDate = new Date(startDate);
-        currentPillDate.setDate(startDate.getDate() + (i - 1));
-        const dayLabel = weekDays[currentPillDate.getDay()];
+        let cur = new Date(startDate);
+        cur.setDate(startDate.getDate() + (i - 1));
         const p = document.getElementById('p-' + i);
-        p.innerHTML = `<small>${dayLabel}</small><b>${i}</b>`;
+        p.innerHTML = `<small>${weekDays[cur.getDay()]}</small><b>${i}</b>`;
     }
 }
 
-// 3. 儲存與讀取
+// 5. 啟動載入
+window.onload = function() {
+    const savedStart = localStorage.getItem('pillStartDate');
+    if (savedStart) {
+        startDateInput.value = savedStart;
+        updateDates();
+    }
+
+    const savedData = JSON.parse(localStorage.getItem('pillTrackerData')) || {};
+    for (let id in savedData) {
+        const p = document.getElementById(id);
+        if (p) p.classList.add(savedData[id]);
+    }
+};
+
 startDateInput.onchange = function() {
     localStorage.setItem('pillStartDate', startDateInput.value);
     updateDates();
 };
 
-window.onload = function() {
-    const savedStartDate = localStorage.getItem('pillStartDate');
-    if (savedStartDate) {
-        startDateInput.value = savedStartDate;
-    }
-    updateDates();
-
-    const savedData = localStorage.getItem('pillHistory');
-    if (savedData) {
-        const history = JSON.parse(savedData);
-        history.forEach(pillId => {
-            const p = document.getElementById(pillId);
-            if (p) p.classList.add('taken');
-        });
-    }
-};
-
-// 4. 按鈕功能
-btn.onclick = function() {
-    const startVal = startDateInput.value;
-    if (!startVal) {
-        alert("請先設定「開始服藥日」！");
-        return;
-    }
-
-    const startDate = new Date(startVal);
-    const today = new Date();
-    
-    // 計算今天是第幾天 (當天算第1天)
-    const diffTime = today - startDate;
-    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1;
-
-    if (diffDays < 1 || diffDays > 28) {
-        alert("今天不在這 28 天的週期內喔！");
-        return;
-    }
-
-    const pillId = 'p-' + diffDays;
-    const p = document.getElementById(pillId);
-    
-    if (p) {
-        if (p.classList.contains('taken')) {
-            alert('今天已經紀錄過了！');
-        } else {
-            p.classList.add('taken');
-            let history = JSON.parse(localStorage.getItem('pillHistory')) || [];
-            history.push(pillId);
-            localStorage.setItem('pillHistory', JSON.stringify(history));
-            alert(`第 ${diffDays} 天紀錄成功！`);
-        }
-    }
-};
-
-resetBtn.onclick = function() {
-    if (confirm('確定要清除所有紀錄並重新開始嗎？')) {
+document.getElementById('reset-btn').onclick = function() {
+    if (confirm('確定清空所有紀錄？')) {
         localStorage.clear();
         location.reload();
     }
