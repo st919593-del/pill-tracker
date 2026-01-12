@@ -2,37 +2,30 @@ body { background: #fff5f7; font-family: -apple-system, sans-serif; display: fle
 .app { width: 90%; max-width: 400px; text-align: center; padding: 20px 0; }
 .info-panel { background: white; padding: 15px; border-radius: 20px; margin-bottom: 20px; text-align: left; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
 .dates-info { border-top: 1px dashed #ffe0e9; margin-top: 10px; padding-top: 10px; font-size: 14px; }
-.dates-info span { color: #ff4d7d; font-weight: bold; }
 .warning-box { background: #fff0f0; color: #d00; padding: 10px; border-radius: 12px; font-size: 13px; margin-top: 10px; border-left: 5px solid #d00; font-weight: bold; }
 
-.grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px; background: white; padding: 15px; border-radius: 20px; margin-bottom: 10px; position: relative; }
-.pill { aspect-ratio: 1/1; border: 2px solid #ffe0e9; border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 11px; cursor: pointer; background: white; position: relative; transition: all 0.2s; }
+.grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px; background: white; padding: 15px; border-radius: 20px; margin-bottom: 10px; }
+.pill { aspect-ratio: 1/1; border: 2px solid #ffe0e9; border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 11px; cursor: pointer; background: white; position: relative; }
 
-/* 樣式疊加 */
+/* 圖例與圖示 */
+.icon-pill { position: absolute; top: -5px; right: -5px; font-size: 12px; }
+.icon-drop { position: absolute; bottom: -2px; left: -2px; font-size: 12px; }
+
 .pill.taken { background: #ff4d7d !important; color: white !important; border-color: #ff4d7d !important; }
-.pill.period { border: 4px solid #ff4d4d !important; color: #d00; font-weight: bold; }
-.pill.taken.period { border: 4px solid #b30000 !important; }
+.pill.period { border: 4px solid #ff4d4d !important; color: #d00; }
 .pill.has-symptoms::after { content: ''; position: absolute; bottom: 3px; width: 6px; height: 6px; background: #ffeb3b; border-radius: 50%; border: 1px solid #fbc02d; }
 
-.legend { display: flex; justify-content: center; gap: 12px; margin: 15px 0; }
-.legend-item { display: flex; align-items: center; font-size: 11px; color: #666; }
-.dot { width: 10px; height: 10px; border-radius: 50%; margin-right: 4px; }
+.legend { display: flex; justify-content: center; gap: 12px; margin: 15px 0; font-size: 11px; }
+.dot { width: 10px; height: 10px; border-radius: 50%; margin-right: 4px; display: inline-block; }
 .dot.taken { background: #ff4d7d; }
 .dot.period { border: 2px solid #ff4d4d; }
-.dot.sym { background: #ffeb3b; border: 1px solid #fbc02d; }
 
-.modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); align-items: center; justify-content: center; z-index: 99999; }
-.modal-content { background: white; padding: 25px; border-radius: 25px; width: 85%; max-width: 320px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); pointer-events: auto; }
-
+.modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); align-items: center; justify-content: center; z-index: 10000; }
+.modal-content { background: white; padding: 25px; border-radius: 25px; width: 85%; max-width: 320px; text-align: center; }
 .symptom-section { text-align: left; margin: 15px 0; padding: 12px; background: #fff9fa; border-radius: 15px; border: 1px solid #ffe0e9; }
-.checkbox-group { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 14px; }
-
+.checkbox-group { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 13px; }
 .btn-action { width: 100%; padding: 14px; margin: 8px 0; border: none; border-radius: 15px; font-size: 16px; font-weight: bold; cursor: pointer; background: #ff4d7d; color: white; }
 .period-btn { background: #ff4d4d; }
 .clear-btn { background: #eee; color: #666; }
 .btn-close { background: none; border: none; color: #999; margin-top: 10px; cursor: pointer; text-decoration: underline; }
 #reset-btn { background: none; color: #ffafc3; text-decoration: underline; margin-top: 25px; border:none; cursor:pointer; }
-
-/* 將這段加入 style.css 底部 */
-.pill.taken::before { content: '💊'; font-size: 10px; margin-bottom: 2px; }
-.pill.period::after { content: '🩸'; font-size: 10px; position: absolute; top: 2px; right: 2px; }
