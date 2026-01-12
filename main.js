@@ -6,7 +6,7 @@ const weekDays = ['日', '一', '二', '三', '四', '五', '六'];
 
 let currentEditingId = null;
 
-// 初始化 28 顆藥丸
+// 1. 初始化 28 顆藥丸
 function initGrid() {
     grid.innerHTML = ''; 
     for (let i = 1; i <= 28; i++) {
@@ -25,6 +25,7 @@ function getFixedDate(dateString) {
     return new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
 }
 
+// 2. 開啟視窗並讀取該日狀態
 function openModal(index) {
     const startVal = startDateInput.value;
     if (!startVal) {
@@ -38,13 +39,11 @@ function openModal(index) {
     targetDate.setDate(targetDate.getDate() + (index - 1));
     document.getElementById('modal-date').innerText = `${targetDate.getFullYear()}/${targetDate.getMonth() + 1}/${targetDate.getDate()} (星期${weekDays[targetDate.getDay()]})`;
     
-    // 清除副作用勾選
+    // 恢復副作用勾選狀態
     document.querySelectorAll('.sym-check').forEach(c => c.checked = false);
-    
     let history = JSON.parse(localStorage.getItem('pillTrackerData')) || {};
     let record = history[currentEditingId] || { taken: false, period: false, symptoms: [] };
 
-    // 恢復副作用勾選
     if (record.symptoms) {
         record.symptoms.forEach(sym => {
             const cb = document.querySelector(`.sym-check[value="${sym}"]`);
@@ -59,47 +58,52 @@ function closeModal() {
     modal.style.display = 'none';
 }
 
-// 核心邏輯：分開紀錄「吃藥」與「生理紀錄」
+// 3. 核心動作處理：吃藥、月經、副作用紀錄
 function logAction(type) {
-    const p = document.getElementById(currentEditingId);
     let history = JSON.parse(localStorage.getItem('pillTrackerData')) || {};
     
-    // 初始化該格資料
+    // 初始化該格
     if (!history[currentEditingId] || typeof history[currentEditingId] !== 'object') {
         history[currentEditingId] = { taken: false, period: false, symptoms: [] };
     }
 
+    // 更新副作用紀錄
     const checks = document.querySelectorAll('.sym-check:checked');
     history[currentEditingId].symptoms = Array.from(checks).map(c => c.value);
 
     if (type === 'taken') {
-        history[currentEditingId].taken = !history[currentEditingId].taken; // 切換吃藥狀態
+        history[currentEditingId].taken = !history[currentEditingId].taken;
     } else if (type === 'period') {
-        history[currentEditingId].period = !history[currentEditingId].period; // 切換月經狀態
+        history[currentEditingId].period = !history[currentEditingId].period;
     } else if (type === 'clear') {
         history[currentEditingId] = { taken: false, period: false, symptoms: [] };
     }
 
-    saveAndRefresh(history);
+    localStorage.setItem('pillTrackerData', JSON.stringify(history));
+    applyStyles(history);
+    checkStock(history);
+    
+    // 只有點擊「已服藥」或「全部清除」才自動關閉
+    if (type === 'taken' || type === 'clear') {
+        closeModal();
+    }
 }
 
-function saveAndRefresh(history) {
-    localStorage.setItem('pillTrackerData', JSON.stringify(history));
-    
-    // 更新所有藥丸的視覺外觀
-    for (let id in history) {
+// 4. 更新視覺樣式
+function applyStyles(history) {
+    for (let i = 1; i <= 28; i++) {
+        const id = 'p-' + i;
         const p = document.getElementById(id);
         if (!p) continue;
-        const data = history[id];
-
+        
+        const data = history[id] || { taken: false, period: false, symptoms: [] };
+        
+        // 移除所有 class 再重新加入
         p.classList.remove('taken', 'period', 'has-symptoms');
         if (data.taken) p.classList.add('taken');
         if (data.period) p.classList.add('period');
         if (data.symptoms && data.symptoms.length > 0) p.classList.add('has-symptoms');
     }
-
-    checkStock(history);
-    closeModal();
 }
 
 function checkStock(history) {
@@ -136,9 +140,9 @@ window.onload = function() {
         startDateInput.value = savedStart;
         updateDates();
     }
-    
     const savedData = JSON.parse(localStorage.getItem('pillTrackerData')) || {};
-    saveAndRefresh(savedData); // 初始化外觀
+    applyStyles(savedData);
+    checkStock(savedData);
 };
 
 startDateInput.onchange = function() {
