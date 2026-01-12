@@ -7,14 +7,16 @@ const weekDays = ['日', '一', '二', '三', '四', '五', '六'];
 let currentEditingId = null;
 
 // 初始化 28 顆藥丸
-grid.innerHTML = ''; // 清空確保不重複生成
-for (let i = 1; i <= 28; i++) {
-    const div = document.createElement('div');
-    div.className = 'pill';
-    div.id = 'p-' + i;
-    div.innerHTML = `<b>${i}</b>`;
-    div.onclick = () => openModal(i);
-    grid.appendChild(div);
+function initGrid() {
+    grid.innerHTML = ''; 
+    for (let i = 1; i <= 28; i++) {
+        const div = document.createElement('div');
+        div.className = 'pill';
+        div.id = 'p-' + i;
+        div.innerHTML = `<b>${i}</b>`;
+        div.onclick = () => openModal(i);
+        grid.appendChild(div);
+    }
 }
 
 function getFixedDate(dateString) {
@@ -37,24 +39,18 @@ function openModal(index) {
     
     document.getElementById('modal-date').innerText = `${targetDate.getFullYear()}/${targetDate.getMonth() + 1}/${targetDate.getDate()} (星期${weekDays[targetDate.getDay()]})`;
     
-    // 清除上次勾選
     document.querySelectorAll('.sym-check').forEach(c => c.checked = false);
     
-    // 讀取紀錄
-    let history = JSON.parse(localStorage.getItem('pillTrackerData')) || {};
-    let record = history[currentEditingId];
-    
-    // 如果是舊格式(字串)，自動轉成新格式(物件)
-    if (typeof record === 'string') {
-        record = { status: record, symptoms: [] };
-    }
-
-    if (record && record.symptoms) {
-        record.symptoms.forEach(sym => {
-            const cb = document.querySelector(`.sym-check[value="${sym}"]`);
-            if (cb) cb.checked = true;
-        });
-    }
+    try {
+        let history = JSON.parse(localStorage.getItem('pillTrackerData')) || {};
+        let record = history[currentEditingId];
+        if (record && record.symptoms) {
+            record.symptoms.forEach(sym => {
+                const cb = document.querySelector(`.sym-check[value="${sym}"]`);
+                if (cb) cb.checked = true;
+            });
+        }
+    } catch(e) { console.log("資料讀取錯誤", e); }
 
     modal.style.display = 'flex';
 }
@@ -89,10 +85,12 @@ function logStatus(status) {
 }
 
 function checkStock(history) {
-    const takenCount = Object.values(history).filter(item => {
-        const s = typeof item === 'string' ? item : item.status;
-        return s === 'taken';
-    }).length;
+    let takenCount = 0;
+    for (let key in history) {
+        let item = history[key];
+        let s = (typeof item === 'object') ? item.status : item;
+        if (s === 'taken') takenCount++;
+    }
     const remaining = 21 - takenCount;
     if (warningBox) {
         warningBox.style.display = (remaining <= 3 && remaining > 0) ? 'block' : 'none';
@@ -111,29 +109,35 @@ function updateDates() {
         let cur = new Date(startDate);
         cur.setDate(startDate.getDate() + (i - 1));
         const p = document.getElementById('p-' + i);
-        p.innerHTML = `<small>${weekDays[cur.getDay()]}</small><b>${i}</b>`;
+        if (p) p.innerHTML = `<small>${weekDays[cur.getDay()]}</small><b>${i}</b>`;
     }
 }
 
 window.onload = function() {
+    initGrid(); // 確保先畫出格子
     const savedStart = localStorage.getItem('pillStartDate');
     if (savedStart) {
         startDateInput.value = savedStart;
         updateDates();
     }
-    const savedData = JSON.parse(localStorage.getItem('pillTrackerData')) || {};
-    for (let id in savedData) {
-        const p = document.getElementById(id);
-        if (p) {
-            let record = savedData[id];
-            let status = typeof record === 'string' ? record : record.status;
-            let syms = record.symptoms || [];
-            
-            p.classList.add(status);
-            if (syms.length > 0) p.classList.add('has-symptoms');
+    
+    try {
+        const savedData = JSON.parse(localStorage.getItem('pillTrackerData')) || {};
+        for (let id in savedData) {
+            const p = document.getElementById(id);
+            if (p) {
+                let record = savedData[id];
+                let status = (typeof record === 'object') ? record.status : record;
+                let syms = (record && record.symptoms) ? record.symptoms : [];
+                p.classList.add(status);
+                if (syms.length > 0) p.classList.add('has-symptoms');
+            }
         }
+        checkStock(savedData);
+    } catch(e) {
+        console.error("啟動載入失敗，清空損毀資料");
+        localStorage.removeItem('pillTrackerData');
     }
-    checkStock(savedData);
 };
 
 startDateInput.onchange = function() {
