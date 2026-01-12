@@ -15,11 +15,12 @@ for (let i = 1; i <= 28; i++) {
     grid.appendChild(div);
 }
 
-// 輔助函式：確保日期計算不會因為時區產生誤差
-function getSafeDate(dateString) {
-    // 將 yyyy-mm-dd 轉換為午夜 12 點的 Date 物件，避免時區偏差
-    const [y, m, d] = dateString.split('-').map(Number);
-    return new Date(y, m - 1, d);
+// 【關鍵修正】手動解析日期字串，防止時區造成的一天誤差
+function getFixedDate(dateString) {
+    if (!dateString) return new Date();
+    // 將 "2026-01-12" 拆解為年、月、日，並手動建立本地時間物件
+    const parts = dateString.split('-');
+    return new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
 }
 
 function openModal(index) {
@@ -31,8 +32,8 @@ function openModal(index) {
     currentEditingId = 'p-' + index;
     document.getElementById('modal-title').innerText = `第 ${index} 天`;
     
-    // 重新計算目標日期
-    let targetDate = getSafeDate(startVal);
+    // 計算該藥丸對應的日期
+    let targetDate = getFixedDate(startVal);
     targetDate.setDate(targetDate.getDate() + (index - 1));
     
     const formattedDate = `${targetDate.getFullYear()}/${targetDate.getMonth() + 1}/${targetDate.getDate()}`;
@@ -66,19 +67,19 @@ function updateDates() {
     const startVal = startDateInput.value;
     if (!startVal) return;
     
-    const startDate = getSafeDate(startVal);
+    const startDate = getFixedDate(startVal);
 
-    // 1. 計算停藥日 (第 21 天吃完後)
+    // 1. 計算停藥日
     let pauseDate = new Date(startDate);
     pauseDate.setDate(startDate.getDate() + 21);
     document.getElementById('pause-date').innerText = `${pauseDate.getFullYear()}/${pauseDate.getMonth() + 1}/${pauseDate.getDate()}`;
 
-    // 2. 計算下包開始日 (第 28 天吃完後，即第 29 天)
+    // 2. 計算下包開始日
     let nextDate = new Date(startDate);
     nextDate.setDate(startDate.getDate() + 28);
     document.getElementById('next-pack-date').innerText = `${nextDate.getFullYear()}/${nextDate.getMonth() + 1}/${nextDate.getDate()}`;
 
-    // 3. 更新每一顆藥丸格子的星期標籤
+    // 3. 更新格子標籤
     for (let i = 1; i <= 28; i++) {
         let cur = new Date(startDate);
         cur.setDate(startDate.getDate() + (i - 1));
