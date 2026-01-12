@@ -29,6 +29,7 @@
         <div class="legend">
             <div class="legend-item"><span class="dot taken"></span> 已吃藥</div>
             <div class="legend-item"><span class="dot period"></span> 月經期</div>
+            <div class="legend-item"><span class="dot sym"></span> 副作用</div>
         </div>
 
         <button id="reset-btn">清空所有資料</button>
@@ -45,3 +46,18 @@
                     <label><input type="checkbox" class="sym-check" value="出血"> 點狀出血</label>
                     <label><input type="checkbox" class="sym-check" value="頭痛"> 頭痛</label>
                     <label><input type="checkbox" class="sym-check" value="噁心"> 噁心</label>
+                    <label><input type="checkbox" class="sym-check" value="胸漲"> 胸部脹痛</label>
+                </div>
+            </div>
+
+            <button class="btn-action" onclick="logStatus('taken')">已吃藥</button>
+            <button class="btn-action period-btn" onclick="logStatus('period')">月經來了</button>
+            <button class="btn-action clear-btn" onclick="logStatus('clear')">清除紀錄</button>
+            
+            <button class="btn-close" onclick="closeModal()">取消返回</button>
+        </div>
+    </div>
+
+    <script src="main.js"></script>
+</body>
+</html>
