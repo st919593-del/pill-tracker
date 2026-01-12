@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>避孕藥助手</title>
+    <title>私密健康助手</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="app">
-        <h1>My Pill Tracker</h1>
+        <h1>Health Tracker</h1>
         
         <div class="info-panel">
             <div class="settings">
@@ -16,16 +16,30 @@
                 <input type="date" id="start-date">
             </div>
             <div class="dates-info">
-                <p>🗓️ 今天是：<span id="today-weekday">-</span></p>
                 <p>🛑 停藥日期：<span id="pause-date">-</span></p>
                 <p>📦 下包開始：<span id="next-pack-date">-</span></p>
             </div>
         </div>
 
         <div id="pill-grid" class="grid"></div>
-        
-        <button id="btn">我今天吃藥了</button>
-        <button id="reset-btn">重設本月紀錄</button>
+
+        <div class="legend">
+            <span class="dot taken"></span> 已吃藥
+            <span class="dot period"></span> 月經期
+        </div>
+
+        <button id="reset-btn">清空所有資料</button>
+    </div>
+
+    <div id="edit-modal" class="modal">
+        <div class="modal-content">
+            <h3 id="modal-title">第 1 天</h3>
+            <p id="modal-date">2023/01/01</p>
+            <button class="btn-action" onclick="logStatus('taken')">已吃藥</button>
+            <button class="btn-action period-btn" onclick="logStatus('period')">月經來了</button>
+            <button class="btn-action clear-btn" onclick="logStatus('clear')">清除狀態</button>
+            <button class="btn-close" onclick="closeModal()">取消</button>
+        </div>
     </div>
 
     <script src="main.js"></script>
